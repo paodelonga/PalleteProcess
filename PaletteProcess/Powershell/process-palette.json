@@ -1,0 +1,269 @@
+{
+  "patterns": {
+    "P1": {
+      "expression": "(path):(line)"
+    },
+    "P2": {
+      "expression": "(path)\\s+(line)",
+      "path": "(?:\\/[\\w\\.\\-]+)+"
+    }
+  },
+  "commands": [
+    {
+      "namespace": "Arduino-CLI",
+      "action": "compile",
+      "command": "date=\"date +%d.%m.%Y\"\nhour=\"date +%H.%M.%S\"\n\ntempPath=\"/tmp/ArduinoCLI\"\ncommandPath=\"$tempPath/output\"\nlogPath=\"{fileDirAbsPath}/Logs/$($date)\"\n\nif [ ! -d \"$tempPath\" ]\nthen\n  mkdir -p \"$tempPath\"\nfi\n\nif [ ! -d \"$commandPath\" ]\nthen\n  mkdir -p \"$commandPath\"\nfi\n\nif [ ! -d \"$logPath\" ]\nthen\n  mkdir -p \"$logPath\"\nfi\n\nlogFile=\"$logPath/$($date) - $($hour)_COMPILE_$(echo -e \"{LogLevel}\" | tr a-z A-Z).txt\"\ncompileOutput=\"$commandPath/COMPILE.txt\"\n\narduino-cli compile \"{fileDirAbsPath}/\" --fqbn {ArduinoBoard} --port {ArduinoPort} --warnings {WarningLevel} --log-level {LogLevel} --log-format 'json' --log-file \"$logFile\" --no-color --format 'json' > \"$compileOutput\"\n\nstdout=$(cat $compileOutput | jq -r '.compiler_out')\nstderr=$(cat $compileOutput | jq -r '.compiler_err')\nstdoutCompileSucess=$(cat $compileOutput | jq -r '.success')\n\nstdoutProgramStorage=$(cat $compileOutput | jq -r '.compiler_out' | sed -n '1 p')\nstdoutDinamicMemory=$(cat $compileOutput | jq -r '.compiler_out' | sed -n '2 p')\n\nif [ $stdoutCompileSucess == true ]; then\n  echo -e \"\\n============================================================ ARDUINO-CLI COMPILE STDOUT ============================================================\" >> \"$logFile\"\n  echo -e \"$stdout\" >> \"$logFile\"\n  echo -e \" \\n[PROGRAM STORAGE]\\n$stdoutProgramStorage\"\n  echo -e \" \\n\\n[DINAMIC MEMORY]\\n$stdoutDinamicMemory\"\n  if [ ! -z \"$stderr\" ]; then\n    echo -e \"\\n============================================================ ARDUINO-CLI COMPILE WARNINGS ============================================================\" >> \"$logFile\"\n    echo -e \"$stderr\" >> \"$logFile\"\n    echo -e \" \\n\\n\\n[WARNINGS]\\n$stderr\"\n  fi\nelif [ $stdoutCompileSucess == false ]; then\n  if [ ! -z \"$stderr\" ]; then\n    echo -e \"\\n============================================================ ARDUINO-CLI COMPILE STDERR ============================================================\" >> \"$logFile\"\n    echo -e \"$stderr\" >> \"$logFile\"\n    echo -e \" \\n\\n\\n[EXIT CODE]\\n$stderr\" >&2\n    false 1\n  fi\nfi\n## Code finish",
+      "arguments": [],
+      "cwd": "{fileDirAbsPath}",
+      "inputDialogs": [
+        {
+          "variableName": "ArduinoPort",
+          "message": "Upload port address, e.g.: COM3 or /dev/ttyACM2",
+          "initialInput": "/dev/ttyACM0"
+        },
+        {
+          "variableName": "ArduinoBoard",
+          "message": "Fully Qualified Board Name, e.g.: arduino:avr:uno",
+          "initialInput": "arduino:avr:uno"
+        },
+        {
+          "variableName": "WarningLevel",
+          "message": "Warning level, Optional, can be: none, default, more, all.",
+          "initialInput": "none"
+        },
+        {
+          "variableName": "LogLevel",
+          "message": "Messages with this level and above will be logged. Valid levels are: trace, debug, info, warn, error, fatal, panic",
+          "initialInput": "debug"
+        }
+      ],
+      "env": {},
+      "keystroke": "ctrl-alt-pageDown",
+      "stream": true,
+      "outputTarget": "panel",
+      "outputBufferSize": 80000,
+      "maxCompleted": 1,
+      "autoShowOutput": false,
+      "autoHideOutput": false,
+      "scrollLockEnabled": true,
+      "singular": true,
+      "promptToSave": true,
+      "saveOption": "referenced",
+      "patterns": [
+        "default"
+      ],
+      "successOutput": "{fileNameExt} compiled successfully!\n{stdout}",
+      "errorOutput": "Failed to compile {fileNameExt} error at:\n{stderr}",
+      "fatalOutput": "\n{stdout}\n\nFatal Error at:\n{stderr}",
+      "startMessage": "Compilling {fileNameExt}",
+      "successMessage": "{fileNameExt} compiled successfully!\n{stdout}",
+      "errorMessage": "Failed to compile {fileNameExt} error at:\n{stderr}",
+      "fatalMessage": "\n{stdout}\n\nFatal Error at:\n{stderr}",
+      "menus": [
+        "Arduino CLI"
+      ],
+      "startScript": null,
+      "successScript": null,
+      "errorScript": null,
+      "scriptOnStart": false,
+      "scriptOnSuccess": false,
+      "scriptOnError": false,
+      "notifyOnStart": true,
+      "notifyOnSuccess": true,
+      "notifyOnError": true,
+      "input": null
+    },
+    {
+      "namespace": "Arduino-CLI",
+      "action": "upload",
+      "command": "date=\"date +%d.%m.%Y\"\nhour=\"date +%H.%M.%S\"\n\ntempPath=\"/tmp/ArduinoCLI\"\ncommandPath=\"$tempPath/output\"\nlogPath=\"{fileDirAbsPath}/Logs/$($date)\"\n\nif [ ! -d \"$tempPath\" ]\nthen\n  mkdir -p \"$tempPath\"\nfi\n\nif [ ! -d \"$commandPath\" ]\nthen\n  mkdir -p \"$commandPath\"\nfi\n\nif [ ! -d \"$logPath\" ]\nthen\n  mkdir -p \"$logPath\"\nfi\n\nlogFile=\"$logPath/$($date) - $($hour)_UPLOAD_$(echo -e \"{LogLevel}\" | tr a-z A-Z).txt\"\ncompileOutput=\"$commandPath/UPLOAD.txt\"\n\narduino-cli compile \"{fileDirAbsPath}/\" --upload --fqbn {ArduinoBoard} --port {ArduinoPort} --warnings {WarningLevel} --log-level {LogLevel} --log-format 'json' --log-file \"$logFile\" --no-color --format 'json' > \"$compileOutput\"\n\nstdout=$(cat $compileOutput | jq -r '.compiler_out')\nstderr=$(cat $compileOutput | jq -r '.compiler_err')\nstdoutCompileSucess=$(cat $compileOutput | jq -r '.success')\n\nstdoutProgramStorage=$(cat $compileOutput | jq -r '.compiler_out' | sed -n '1 p')\nstdoutDinamicMemory=$(cat $compileOutput | jq -r '.compiler_out' | sed -n '2 p')\n\nif [ $stdoutCompileSucess == true ]; then\n  echo -e \"\\n============================================================ ARDUINO-CLI COMPILE STDOUT ============================================================\" >> \"$logFile\"\n  echo -e \"$stdout\" >> \"$logFile\"\n  echo -e \" \\n[PROGRAM STORAGE]\\n$stdoutProgramStorage\"\n  echo -e \" \\n\\n[DINAMIC MEMORY]\\n$stdoutDinamicMemory\"\n  if [ ! -z \"$stderr\" ]; then\n    echo -e \"\\n============================================================ ARDUINO-CLI COMPILE WARNINGS ============================================================\" >> \"$logFile\"\n    echo -e \"$stderr\" >> \"$logFile\"\n    echo -e \" \\n\\n\\n[WARNINGS]\\n$stderr\"\n  fi\nelif [ $stdoutCompileSucess == false ]; then\n  if [ ! -z \"$stderr\" ]; then\n    echo -e \"\\n============================================================ ARDUINO-CLI COMPILE STDERR ============================================================\" >> \"$logFile\"\n    echo -e \"$stderr\" >> \"$logFile\"\n    echo -e \" \\n\\n\\n[EXIT CODE]\\n$stderr\" >&2\n    false 1\n  fi\nfi\n## Code finish",
+      "arguments": [],
+      "cwd": "{fileDirAbsPath}",
+      "inputDialogs": [
+        {
+          "variableName": "ArduinoPort",
+          "message": "Upload port address, e.g.: COM3 or /dev/ttyACM2",
+          "initialInput": "/dev/ttyACM0"
+        },
+        {
+          "variableName": "ArduinoBoard",
+          "message": "Fully Qualified Board Name, e.g.: arduino:avr:uno",
+          "initialInput": "arduino:avr:uno"
+        },
+        {
+          "variableName": "WarningLevel",
+          "message": "Warning level, Optional, can be: none, default, more, all.",
+          "initialInput": "none"
+        },
+        {
+          "variableName": "LogLevel",
+          "message": "Messages with this level and above will be logged. Valid levels are: trace, debug, info, warn, error, fatal, panic",
+          "initialInput": "debug"
+        }
+      ],
+      "env": {},
+      "keystroke": "ctrl-alt-pageUp",
+      "stream": true,
+      "outputTarget": "panel",
+      "outputBufferSize": 80000,
+      "maxCompleted": 1,
+      "autoShowOutput": false,
+      "autoHideOutput": false,
+      "scrollLockEnabled": true,
+      "singular": true,
+      "promptToSave": true,
+      "saveOption": "referenced",
+      "patterns": [
+        "default"
+      ],
+      "successOutput": "{fileNameExt} uploaded successfully!\n{stdout}",
+      "errorOutput": "Failed to upload {fileNameExt} error at:\n{stderr}",
+      "fatalOutput": "\n{stdout}\n\nFatal Error at:\n{stderr}",
+      "startMessage": "Uploading {fileNameExt}",
+      "successMessage": "{fileNameExt} uploaded successfully!\n{stdout}",
+      "errorMessage": "Failed to upload {fileNameExt} error at:\n{stderr}",
+      "fatalMessage": "\n{stdout}\n\nFatal Error at:\n{stderr}",
+      "menus": [
+        "Arduino CLI"
+      ],
+      "startScript": null,
+      "successScript": null,
+      "errorScript": null,
+      "scriptOnStart": false,
+      "scriptOnSuccess": false,
+      "scriptOnError": false,
+      "notifyOnStart": true,
+      "notifyOnSuccess": true,
+      "notifyOnError": true,
+      "input": null
+    },
+    {
+      "namespace": "Arduino-CLI",
+      "action": "monitor",
+      "command": "date=\"date +%d.%m.%Y\"\nhour=\"date +%H.%M.%S\"\n\ntempPath=\"/tmp/ArduinoCLI\"\ncommandPath=\"$tempPath/output\"\nlogPath=\"{fileDirAbsPath}/Logs/$($date)\"\n\nif [ ! -d \"$tempPath\" ]\nthen\n  mkdir -p \"$tempPath\"\nfi\n\nif [ ! -d \"$commandPath\" ]\nthen\n  mkdir -p \"$commandPath\"\nfi\n\nif [ ! -d \"$logPath\" ]\nthen\n  mkdir -p \"$logPath\"\nfi\n\nlogFile=\"$logPath/$($date) - $($hour)_COMPILE_$(echo -e \"{LogLevel}\" | tr a-z A-Z).txt\"\ncompileOutput=\"$commandPath/COMPILE.txt\"\n\narduino-cli compile \"{fileDirAbsPath}/\" --fqbn {ArduinoBoard} --port {ArduinoPort} --warnings {WarningLevel} --log-level {LogLevel} --log-format 'json' --log-file \"$logFile\" --no-color --format 'json' > \"$compileOutput\"\n\nstdout=$(cat $compileOutput | jq -r '.compiler_out')\nstderr=$(cat $compileOutput | jq -r '.compiler_err')\nstdoutCompileSucess=$(cat $compileOutput | jq -r '.success')\n\nstdoutProgramStorage=$(cat $compileOutput | jq -r '.compiler_out' | sed -n '1 p')\nstdoutDinamicMemory=$(cat $compileOutput | jq -r '.compiler_out' | sed -n '2 p')\n\nif [ $stdoutCompileSucess == true ]; then\n  echo -e \"\\n============================================================ ARDUINO-CLI COMPILE STDOUT ============================================================\" >> \"$logFile\"\n  echo -e \"$stdout\" >> \"$logFile\"\n  echo -e \" \\n[PROGRAM STORAGE]\\n$stdoutProgramStorage\"\n  echo -e \" \\n\\n[DINAMIC MEMORY]\\n$stdoutDinamicMemory\"\n  if [ ! -z \"$stderr\" ]; then\n    echo -e \"\\n============================================================ ARDUINO-CLI COMPILE WARNINGS ============================================================\" >> \"$logFile\"\n    echo -e \"$stderr\" >> \"$logFile\"\n    echo -e \" \\n\\n\\n[WARNINGS]\\n$stderr\"\n  fi\nelif [ $stdoutCompileSucess == false ]; then\n  if [ ! -z \"$stderr\" ]; then\n    echo -e \"\\n============================================================ ARDUINO-CLI COMPILE STDERR ============================================================\" >> \"$logFile\"\n    echo -e \"$stderr\" >> \"$logFile\"\n    echo -e \" \\n\\n\\n[EXIT CODE]\\n$stderr\" >&2\n    false 1\n  fi\nfi\n## Code finish",
+      "arguments": [],
+      "cwd": "{fileDirAbsPath}",
+      "inputDialogs": [
+        {
+          "variableName": "ArduinoPort",
+          "message": "Upload port address, e.g.: COM3 or /dev/ttyACM2",
+          "initialInput": "/dev/ttyACM0"
+        },
+        {
+          "variableName": "ArduinoBoard",
+          "message": "Fully Qualified Board Name, e.g.: arduino:avr:uno",
+          "initialInput": "arduino:avr:uno"
+        },
+        {
+          "variableName": "WarningLevel",
+          "message": "Warning level, Optional, can be: none, default, more, all.",
+          "initialInput": "none"
+        },
+        {
+          "variableName": "LogLevel",
+          "message": "Messages with this level and above will be logged. Valid levels are: trace, debug, info, warn, error, fatal, panic",
+          "initialInput": "debug"
+        }
+      ],
+      "env": {},
+      "keystroke": "ctrl-alt-insert",
+      "stream": true,
+      "outputTarget": "panel",
+      "outputBufferSize": 80000,
+      "maxCompleted": 1,
+      "autoShowOutput": false,
+      "autoHideOutput": false,
+      "scrollLockEnabled": true,
+      "singular": true,
+      "promptToSave": true,
+      "saveOption": "referenced",
+      "patterns": [
+        "default"
+      ],
+      "successOutput": "{fileNameExt} compiled successfully!\n{stdout}",
+      "errorOutput": "Failed to compile {fileNameExt} error at:\n{stderr}",
+      "fatalOutput": "\n{stdout}\n\nFatal Error at:\n{stderr}",
+      "startMessage": "Compilling {fileNameExt}",
+      "successMessage": "{fileNameExt} compiled successfully!\n{stdout}",
+      "errorMessage": "Failed to compile {fileNameExt} error at:\n{stderr}",
+      "fatalMessage": "\n{stdout}\n\nFatal Error at:\n{stderr}",
+      "menus": [
+        "Arduino CLI"
+      ],
+      "startScript": null,
+      "successScript": "e2ZpbGVOYW1lRXh0fSBTdWNlc3NmdWxseSBjb21waWxlZCEKe3N0ZG91dH0=",
+      "errorScript": null,
+      "scriptOnStart": false,
+      "scriptOnSuccess": false,
+      "scriptOnError": false,
+      "notifyOnStart": true,
+      "notifyOnSuccess": true,
+      "notifyOnError": true,
+      "input": null
+    },
+    {
+      "namespace": "Arduino-CLI",
+      "action": "build",
+      "command": "date=\"date +%d.%m.%Y\"\nhour=\"date +%H.%M.%S\"\n\ntempPath=\"/tmp/ArduinoCLI\"\ncommandPath=\"$tempPath/output\"\nlogPath=\"{fileDirAbsPath}/Logs/$($date)\"\n\nif [ ! -d \"$tempPath\" ]\nthen\n  mkdir -p \"$tempPath\"\nfi\n\nif [ ! -d \"$commandPath\" ]\nthen\n  mkdir -p \"$commandPath\"\nfi\n\nif [ ! -d \"$logPath\" ]\nthen\n  mkdir -p \"$logPath\"\nfi\n\nlogFile=\"$logPath/$($date) - $($hour)BUILD_$(echo -e \"{LogLevel}\" | tr a-z A-Z).txt\"\ncompileOutput=\"$commandPath/BUILD.txt\"\n\narduino-cli compile \"{fileDirAbsPath}/\" --upload --fqbn {ArduinoBoard} --port {ArduinoPort} --warnings {WarningLevel} --log-level {LogLevel} --log-format 'json' --log-file \"$logFile\" --no-color --format 'json' > \"$compileOutput\"\n\nstdout=$(cat $compileOutput | jq -r '.compiler_out')\nstderr=$(cat $compileOutput | jq -r '.compiler_err')\nstdoutCompileSucess=$(cat $compileOutput | jq -r '.success')\n\nstdoutProgramStorage=$(cat $compileOutput | jq -r '.compiler_out' | sed -n '1 p')\nstdoutDinamicMemory=$(cat $compileOutput | jq -r '.compiler_out' | sed -n '2 p')\n\nif [ $stdoutCompileSucess == true ]; then\n  echo -e \"\\n============================================================ ARDUINO-CLI COMPILE STDOUT ============================================================\" >> \"$logFile\"\n  echo -e \"$stdout\" >> \"$logFile\"\n  echo -e \" \\n[PROGRAM STORAGE]\\n$stdoutProgramStorage\"\n  echo -e \" \\n\\n[DINAMIC MEMORY]\\n$stdoutDinamicMemory\"\n  if [ ! -z \"$stderr\" ]; then\n    echo -e \"\\n============================================================ ARDUINO-CLI COMPILE WARNINGS ============================================================\" >> \"$logFile\"\n    echo -e \"$stderr\" >> \"$logFile\"\n    echo -e \" \\n\\n\\n[WARNINGS]\\n$stderr\"\n  fi\nelif [ $stdoutCompileSucess == false ]; then\n  if [ ! -z \"$stderr\" ]; then\n    echo -e \"\\n============================================================ ARDUINO-CLI COMPILE STDERR ============================================================\" >> \"$logFile\"\n    echo -e \"$stderr\" >> \"$logFile\"\n    echo -e \" \\n\\n\\n[EXIT CODE]\\n$stderr\" >&2\n    false 1\n  fi\nfi\n## Code finish",
+      "arguments": [],
+      "cwd": "{fileDirAbsPath}",
+      "inputDialogs": [
+        {
+          "variableName": "ArduinoPort",
+          "message": "Upload port address, e.g.: COM3 or /dev/ttyACM2",
+          "initialInput": "/dev/ttyACM0"
+        },
+        {
+          "variableName": "ArduinoBoard",
+          "message": "Fully Qualified Board Name, e.g.: arduino:avr:uno",
+          "initialInput": "arduino:avr:uno"
+        },
+        {
+          "variableName": "WarningLevel",
+          "message": "Warning level, Optional, can be: none, default, more, all.",
+          "initialInput": "none"
+        },
+        {
+          "variableName": "LogLevel",
+          "message": "Messages with this level and above will be logged. Valid levels are: trace, debug, info, warn, error, fatal, panic",
+          "initialInput": "debug"
+        }
+      ],
+      "env": {},
+      "keystroke": "ctrl-alt-end",
+      "stream": true,
+      "outputTarget": "panel",
+      "outputBufferSize": 80000,
+      "maxCompleted": 1,
+      "autoShowOutput": false,
+      "autoHideOutput": false,
+      "scrollLockEnabled": true,
+      "singular": true,
+      "promptToSave": true,
+      "saveOption": "referenced",
+      "patterns": [
+        "default"
+      ],
+      "successOutput": "{fileNameExt} compiled successfully!\n{stdout}",
+      "errorOutput": "Failed to compile {fileNameExt} error at:\n{stderr}",
+      "fatalOutput": "\n{stdout}\n\nFatal Error at:\n{stderr}",
+      "startMessage": "Compilling {fileNameExt}",
+      "successMessage": "{fileNameExt} compiled successfully!\n{stdout}",
+      "errorMessage": "Failed to compile {fileNameExt} error at:\n{stderr}",
+      "fatalMessage": "\n{stdout}\n\nFatal Error at:\n{stderr}",
+      "menus": [
+        "Arduino CLI"
+      ],
+      "startScript": null,
+      "successScript": "e2ZpbGVOYW1lRXh0fSBTdWNlc3NmdWxseSBjb21waWxlZCEKe3N0ZG91dH0=",
+      "errorScript": null,
+      "scriptOnStart": false,
+      "scriptOnSuccess": false,
+      "scriptOnError": false,
+      "notifyOnStart": true,
+      "notifyOnSuccess": true,
+      "notifyOnError": true,
+      "input": null
+    }
+  ]
+}
